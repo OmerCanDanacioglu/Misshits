@@ -4,6 +4,7 @@ using Avalonia.Markup.Xaml;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Misshits.Desktop.Data;
+using Misshits.Desktop.Models;
 using Misshits.Desktop.Services;
 using Misshits.Desktop.ViewModels;
 using Misshits.Desktop.Views;
@@ -23,61 +24,15 @@ public partial class App : Application
     {
         try
         {
-            Console.WriteLine("Misshits: Starting up...");
-
-            var services = new ServiceCollection();
-
-            var dbDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Misshits");
-            Directory.CreateDirectory(dbDir);
-            var dbPath = Path.Combine(dbDir, "misshits.db");
-            Console.WriteLine($"Misshits: DB path = {dbPath}");
-
-            services.AddDbContextFactory<AppDbContext>(options =>
-                options.UseSqlite($"Data Source={dbPath}"));
-
-            services.AddSingleton<ISymSpellService, SymSpellService>();
-            services.AddSingleton<ISmartConnectionService, SmartConnectionService>();
-            services.AddHttpClient<ISmartConnectionService, SmartConnectionService>();
-            services.AddSingleton<ISpellCheckService, SpellCheckService>();
-            services.AddSingleton<IQuickPhraseService, QuickPhraseService>();
-            services.AddSingleton<ITextToSpeechService, TextToSpeechService>();
-
-            services.AddSingleton<KeyboardViewModel>();
-            services.AddSingleton<QuickPhrasesViewModel>();
-            services.AddSingleton<MainWindowViewModel>();
-
-            var provider = services.BuildServiceProvider();
+            var provider = ConfigureServices();
             Services = provider;
-
-            Console.WriteLine("Misshits: Services built, creating window...");
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 var vm = provider.GetRequiredService<MainWindowViewModel>();
                 desktop.MainWindow = new MainWindow { DataContext = vm };
-                Console.WriteLine("Misshits: Window created.");
 
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        // Ensure DB and tables exist (no-op if already created)
-                        using var scope = provider.CreateScope();
-                        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                        await db.Database.EnsureCreatedAsync();
-
-                        // Load SymSpell dictionary from DB into memory
-                        var symSpell = provider.GetRequiredService<ISymSpellService>();
-                        await symSpell.LoadDictionaryAsync(provider);
-                        Console.WriteLine("Misshits: Dictionary loaded.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Misshits: Startup error: {ex}");
-                    }
-                });
+                LoadDictionaryInBackground(provider);
             }
         }
         catch (Exception ex)
@@ -86,5 +41,60 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static ServiceProvider ConfigureServices()
+    {
+        var services = new ServiceCollection();
+
+        // Database
+        var dbDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Misshits");
+        Directory.CreateDirectory(dbDir);
+        var dbPath = Path.Combine(dbDir, "misshits.db");
+
+        services.AddDbContextFactory<AppDbContext>(options =>
+            options.UseSqlite($"Data Source={dbPath}"));
+
+        // Configuration
+        services.AddSingleton(new SmartConnectionOptions());
+
+        // Services
+        services.AddSingleton<ISymSpellService, SymSpellService>();
+        services.AddHttpClient<ISmartConnectionService, SmartConnectionService>();
+        services.AddSingleton<ISpellCheckService, SpellCheckService>();
+        services.AddSingleton<IQuickPhraseService, QuickPhraseService>();
+        services.AddSingleton<ITextToSpeechService, TextToSpeechService>();
+        services.AddSingleton<ITextBuffer, TextBuffer>();
+        services.AddSingleton<IAutoCorrectionService, AutoCorrectionService>();
+
+        // ViewModels
+        services.AddSingleton<KeyboardViewModel>();
+        services.AddSingleton<QuickPhrasesViewModel>();
+        services.AddSingleton<MainWindowViewModel>();
+
+        return services.BuildServiceProvider();
+    }
+
+    private static void LoadDictionaryInBackground(IServiceProvider provider)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                using var scope = provider.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await db.Database.EnsureCreatedAsync();
+
+                var symSpell = provider.GetRequiredService<ISymSpellService>();
+                await symSpell.LoadDictionaryAsync(provider);
+                Console.WriteLine("Misshits: Dictionary loaded.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Misshits: Startup error: {ex}");
+            }
+        });
     }
 }

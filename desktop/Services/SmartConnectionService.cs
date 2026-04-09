@@ -8,23 +8,18 @@ namespace Misshits.Desktop.Services;
 
 public class SmartConnectionService : ISmartConnectionService
 {
-    private const string BaseUrl = "https://smartconnectionapimanagement.azure-api.net/staging";
-    private const string ClientVersion = "3.0.98";
-    private const string UserId = "Misshits";
-    private const string FallbackPrompt =
-        "Fix the sentence. Try to capture the meaning of the sentence. " +
-        "Find if there are any out of place words and replace them with correct ones.";
-
     private readonly HttpClient _http;
+    private readonly SmartConnectionOptions _options;
     private string? _token;
     private DateTime _tokenExpiry = DateTime.MinValue;
     private readonly SemaphoreSlim _authLock = new(1, 1);
 
-    public SmartConnectionService(HttpClient http)
+    public SmartConnectionService(HttpClient http, SmartConnectionOptions options)
     {
         _http = http;
-        _http.BaseAddress = new Uri(BaseUrl);
-        _http.DefaultRequestHeaders.Add("client-version", ClientVersion);
+        _options = options;
+        _http.BaseAddress = new Uri(options.BaseUrl);
+        _http.DefaultRequestHeaders.Add("client-version", options.ClientVersion);
     }
 
     public async Task<string?> CorrectSentenceAsync(string sentence, List<WordCorrection>? corrections)
@@ -33,7 +28,6 @@ public class SmartConnectionService : ISmartConnectionService
         var token = await GetTokenAsync();
         var result = await SendCorrectionRequest(sentence, prompt, token);
 
-        // If 401, refresh token and retry once
         if (result == null)
         {
             _token = null;
@@ -66,25 +60,19 @@ public class SmartConnectionService : ISmartConnectionService
 
         var body = new
         {
-            customPrompt = "Predict the next 5 most likely words the user would type next. " +
-                "Return ONLY the words separated by commas, nothing else. " +
-                "Consider common English phrases and natural conversation. " +
-                "Keep predictions short (single words or common contractions like I'm, don't).",
+            customPrompt = _options.PredictionPrompt,
             userContent = context,
             expectedResponseCount = 1,
             locale = "en-gb"
         };
 
         request.Content = new StringContent(
-            JsonSerializer.Serialize(body),
-            Encoding.UTF8,
-            "application/json");
+            JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
 
         var response = await _http.SendAsync(request);
 
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             return null;
-
         if (!response.IsSuccessStatusCode)
             return new List<string>();
 
@@ -98,10 +86,10 @@ public class SmartConnectionService : ISmartConnectionService
             .ToList();
     }
 
-    private static string BuildPrompt(List<WordCorrection>? corrections)
+    private string BuildPrompt(List<WordCorrection>? corrections)
     {
         if (corrections == null || corrections.Count == 0)
-            return FallbackPrompt;
+            return _options.FallbackPrompt;
 
         var wordList = string.Join(", ",
             corrections.Select(c => $"'{c.Original}' was auto-corrected to '{c.Corrected}'"));
@@ -128,21 +116,17 @@ public class SmartConnectionService : ISmartConnectionService
         };
 
         request.Content = new StringContent(
-            JsonSerializer.Serialize(body),
-            Encoding.UTF8,
-            "application/json");
+            JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
 
         var response = await _http.SendAsync(request);
 
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             return null;
-
         if (!response.IsSuccessStatusCode)
-            return sentence; // Return original on error
+            return sentence;
 
         var json = await response.Content.ReadAsStringAsync();
         var result = JsonSerializer.Deserialize<LlmResponse>(json);
-
         return result?.Responses?.FirstOrDefault() ?? sentence;
     }
 
@@ -154,16 +138,13 @@ public class SmartConnectionService : ISmartConnectionService
         await _authLock.WaitAsync();
         try
         {
-            // Double-check after acquiring lock
             if (_token != null && DateTime.UtcNow < _tokenExpiry)
                 return _token;
 
             var request = new HttpRequestMessage(HttpMethod.Post, "/authentication/login");
-            var body = new { UserId };
+            var body = new { UserId = _options.UserId };
             request.Content = new StringContent(
-                JsonSerializer.Serialize(body),
-                Encoding.UTF8,
-                "application/json");
+                JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
 
             var response = await _http.SendAsync(request);
             response.EnsureSuccessStatusCode();
@@ -172,8 +153,7 @@ public class SmartConnectionService : ISmartConnectionService
             var result = JsonSerializer.Deserialize<LoginResponse>(json);
 
             _token = result?.Token ?? throw new Exception("No token in login response");
-            _tokenExpiry = DateTime.UtcNow.AddMinutes(90); // Refresh before 2h expiry
-
+            _tokenExpiry = DateTime.UtcNow.AddMinutes(90);
             return _token;
         }
         finally

@@ -9,14 +9,14 @@ namespace Misshits.Desktop.ViewModels;
 public partial class QuickPhrasesViewModel : ViewModelBase
 {
     private readonly IQuickPhraseService _service;
-    private readonly KeyboardViewModel _keyboard;
+    private readonly ITextBuffer _textBuffer;
 
     public ObservableCollection<QuickPhrase> Phrases { get; } = new();
 
-    public QuickPhrasesViewModel(IQuickPhraseService service, KeyboardViewModel keyboard)
+    public QuickPhrasesViewModel(IQuickPhraseService service, ITextBuffer textBuffer)
     {
         _service = service;
-        _keyboard = keyboard;
+        _textBuffer = textBuffer;
         _ = LoadPhrasesAsync();
     }
 
@@ -35,16 +35,14 @@ public partial class QuickPhrasesViewModel : ViewModelBase
     {
         var text = await _service.UseAsync(id);
         if (text != null)
-        {
-            Dispatcher.UIThread.Post(() => _keyboard.AppendText(text));
-        }
+            Dispatcher.UIThread.Post(() => _textBuffer.AppendText(text, smartSpacing: true));
         await LoadPhrasesAsync();
     }
 
     [RelayCommand]
     private async Task SaveCurrentText()
     {
-        var text = _keyboard.Text.Trim();
+        var text = _textBuffer.Text.Trim();
         if (string.IsNullOrEmpty(text)) return;
         await _service.AddAsync(text);
         await LoadPhrasesAsync();
