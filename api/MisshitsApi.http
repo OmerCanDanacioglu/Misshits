@@ -1,0 +1,6 @@
+@MisshitsApi_HostAddress = http://localhost:5265
+
+GET {{MisshitsApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

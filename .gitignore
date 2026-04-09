@@ -1,0 +1,25 @@
+# Node
+node_modules/
+dist/
+
+# .NET
+api/bin/
+api/obj/
+
+# SUBTLEX-UK data file (large, not for version control)
+api/Data/SUBTLEX-UK.txt
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*

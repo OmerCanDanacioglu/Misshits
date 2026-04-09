@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(export PATH=\"$HOME/.dotnet:$PATH\")",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet run:*)",
+      "Bash(curl -s \"http://localhost:5050/api/spellcheck?word=helo\")",
+      "Bash(curl -s \"http://localhost:5050/api/spellcheck?word=teh\")",
+      "Bash(curl -s \"http://localhost:5050/api/spellcheck?word=becuase\")",
+      "Bash(curl -s \"http://localhost:5050/api/spellcheck?word=hello\")",
+      "Bash(curl -s \"http://localhost:5050/api/health\")",
+      "Bash(curl -s \"http://localhost:5050/api/spellcheck?word=writting\")",
+      "Bash(curl:*)",
+      "Bash(npx vite:*)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": false
+  }
+}

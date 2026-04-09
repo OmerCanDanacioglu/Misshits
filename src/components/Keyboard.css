@@ -1,0 +1,409 @@
+.keyboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #181818;
+  border-bottom: 1px solid #2a2a2a;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-toggles {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.speak-btn {
+  background: #2d8ecf;
+  color: #fff;
+}
+
+.speak-btn:hover {
+  background: #3a9fe0;
+}
+
+.clear-btn {
+  background: #c0392b;
+  color: #fff;
+}
+
+.clear-btn:hover {
+  background: #e04a3a;
+}
+
+.undo-btn {
+  background: #555;
+  color: #fff;
+}
+
+.undo-btn:hover {
+  background: #666;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  display: none;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: #333;
+  border-radius: 11px;
+  transition: background 0.2s;
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: #666;
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.toggle input:checked + .toggle-slider {
+  background: #2d8ecf;
+}
+
+.toggle input:checked + .toggle-slider::after {
+  transform: translateX(18px);
+  background: #fff;
+}
+
+.toggle-label {
+  color: #8a8a8a;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.text-output {
+  flex: 1;
+  background: #111;
+  border-bottom: 1px solid #2a2a2a;
+  padding: 16px;
+  overflow-y: auto;
+  color: #e0e0e0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 16px;
+}
+
+.text-output pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: inherit;
+}
+
+.cursor {
+  animation: blink 1s step-end infinite;
+  font-weight: 300;
+  color: #2d8ecf;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.correcting-indicator {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #2d8ecf;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.suggestions-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border-top: 1px solid #2a2a2a;
+  min-height: 48px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.suggestions-label {
+  color: #e05555;
+  font-size: 15px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.suggestion {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: #4aafe0;
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+
+.suggestion:first-of-type {
+  background: #2d8ecf;
+  color: #fff;
+}
+
+.predictions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #1a1a1a;
+  border-top: 1px solid #2a2a2a;
+  min-height: 48px;
+  flex-shrink: 0;
+}
+
+.predictions-bar.empty {
+  min-height: 48px;
+}
+
+.prediction {
+  padding: 8px 24px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #222;
+  color: #4aafe0;
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.prediction:hover {
+  background: #2d8ecf;
+  color: #fff;
+  border-color: #2d8ecf;
+}
+
+.phrases-btn {
+  background: #2a6e3f !important;
+  color: #fff !important;
+}
+
+.phrases-btn:hover, .phrases-btn.active {
+  background: #35884d !important;
+}
+
+.phrases-panel {
+  background: #181818;
+  border-bottom: 1px solid #2a2a2a;
+  padding: 10px 12px;
+  flex-shrink: 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.phrases-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.phrase-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #333;
+  border-radius: 20px;
+  background: #222;
+  color: #4aafe0;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.phrase-btn:hover {
+  background: #2d8ecf;
+  color: #fff;
+  border-color: #2d8ecf;
+}
+
+.phrase-delete {
+  font-size: 11px;
+  color: #666;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.phrase-delete:hover {
+  color: #e04a3a;
+}
+
+.phrases-add {
+  display: flex;
+  gap: 8px;
+}
+
+.phrases-add .action-btn {
+  background: #333;
+  color: #aaa;
+  font-size: 12px;
+  padding: 5px 12px;
+}
+
+.phrases-add .action-btn:hover {
+  background: #444;
+  color: #fff;
+}
+
+.suggestion:hover {
+  background: #3a9fe0;
+  color: #fff;
+}
+
+/* Keyboard container */
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 4px;
+  background: #1c1c1c;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 2px;
+}
+
+/* Base key: letter keys are nearly invisible, just text */
+.key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  height: 72px;
+  min-width: 0;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #4aafe0;
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 400;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background 0.08s;
+}
+
+.key:hover {
+  background: rgba(74, 175, 224, 0.08);
+}
+
+.key.pressed {
+  background: rgba(74, 175, 224, 0.15);
+  color: #fff;
+}
+
+/* Special keys: visible dark background */
+.key.special {
+  background: #2a2a2a;
+  color: #4aafe0;
+  font-size: 18px;
+}
+
+.key.special:hover {
+  background: #353535;
+}
+
+.key.special.pressed {
+  background: #2d8ecf;
+  color: #fff;
+}
+
+.key.toggled {
+  background: #2d8ecf;
+  color: #fff;
+}
+
+/* Space key */
+.key.space {
+  background: #2a2a2a;
+}
+
+.key.space .main-label {
+  font-size: 16px;
+  color: #6a6a6a;
+}
+
+.key.space:hover {
+  background: #353535;
+}
+
+.main-label {
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.sub-label {
+  font-size: 9px;
+  line-height: 1;
+  color: #555;
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+
+.shift-label {
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.5;
+}
