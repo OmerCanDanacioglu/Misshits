@@ -7,6 +7,8 @@ api/bin/
 api/obj/
 desktop/bin/
 desktop/obj/
+desktop.Tests/bin/
+desktop.Tests/obj/
 
 # SUBTLEX-UK data file (large, not for version control)
 api/Data/SUBTLEX-UK.txt

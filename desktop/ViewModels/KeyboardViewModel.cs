@@ -15,6 +15,7 @@ public partial class KeyboardViewModel : ViewModelBase
     private readonly ISmartConnectionService _smartConnection;
     private readonly ITextToSpeechService _tts;
     private readonly IAutoCorrectionService _autoCorrection;
+    private readonly ISettingsService _settings;
 
     // --- Keyboard layout ---
     public List<List<KeyViewModel>> Rows { get; }
@@ -48,13 +49,22 @@ public partial class KeyboardViewModel : ViewModelBase
         ISpellCheckService spellCheck,
         ISmartConnectionService smartConnection,
         ITextToSpeechService tts,
-        IAutoCorrectionService autoCorrection)
+        IAutoCorrectionService autoCorrection,
+        ISettingsService settings)
     {
         _textBuffer = textBuffer;
         _spellCheck = spellCheck;
         _smartConnection = smartConnection;
         _tts = tts;
         _autoCorrection = autoCorrection;
+        _settings = settings;
+
+        // Load persisted settings
+        var saved = settings.Load();
+        _autoCorrectEnabled = saved.AutoCorrectEnabled;
+        _shorterOnly = saved.ShorterOnly;
+        _autoSpeak = saved.AutoSpeak;
+        _apiEnabled = saved.ApiEnabled;
 
         Rows = KeyboardLayouts.Qwerty.Select(row =>
             row.Select(def => new KeyViewModel(def)).ToList()
@@ -80,6 +90,22 @@ public partial class KeyboardViewModel : ViewModelBase
         };
         Predictions.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasPredictions));
     }
+
+    private void SaveSettings()
+    {
+        _settings.Save(new AppSettings
+        {
+            AutoCorrectEnabled = AutoCorrectEnabled,
+            ShorterOnly = ShorterOnly,
+            AutoSpeak = AutoSpeak,
+            ApiEnabled = ApiEnabled
+        });
+    }
+
+    partial void OnAutoCorrectEnabledChanged(bool value) => SaveSettings();
+    partial void OnShorterOnlyChanged(bool value) => SaveSettings();
+    partial void OnAutoSpeakChanged(bool value) => SaveSettings();
+    partial void OnApiEnabledChanged(bool value) => SaveSettings();
 
     private int _textChangeDepth;
 

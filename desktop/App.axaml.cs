@@ -61,6 +61,7 @@ public partial class App : Application
         services.AddSingleton(new SmartConnectionOptions());
 
         // Services
+        services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<ISymSpellService, SymSpellService>();
         services.AddHttpClient<ISmartConnectionService, SmartConnectionService>();
         services.AddSingleton<ISpellCheckService, SpellCheckService>();
