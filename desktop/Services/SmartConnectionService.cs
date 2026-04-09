@@ -6,7 +6,7 @@ using Misshits.Desktop.Models;
 
 namespace Misshits.Desktop.Services;
 
-public class SmartConnectionService
+public class SmartConnectionService : ISmartConnectionService
 {
     private const string BaseUrl = "https://smartconnectionapimanagement.azure-api.net/staging";
     private const string ClientVersion = "3.0.98";

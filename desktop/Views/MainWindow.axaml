@@ -92,6 +92,7 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="models:KeyViewModel">
                   <Button Height="72" CornerRadius="4" Margin="1"
+                          Focusable="False"
                           controls:FlexPanel.Weight="{Binding Width}"
                           Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Keyboard.MouseClickCommand}"
                           CommandParameter="{Binding Code}"
@@ -99,10 +100,28 @@
                           HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Center"
                           VerticalContentAlignment="Center"
-                          Padding="4,6">
+                          Padding="4,6"
+                          Classes.pressed="{Binding IsPressed}"
+                          Classes.toggled="{Binding IsToggled}"
+                          Classes.special="{Binding Special}"
+                          Classes.space="{Binding IsSpace}">
                     <Button.Styles>
                       <Style Selector="Button">
                         <Setter Property="Background" Value="Transparent" />
+                      </Style>
+                      <Style Selector="Button.special">
+                        <Setter Property="Background" Value="#2A2A2A" />
+                      </Style>
+                      <Style Selector="Button.space">
+                        <Setter Property="Background" Value="#2A2A2A" />
+                      </Style>
+                      <Style Selector="Button.pressed">
+                        <Setter Property="Background" Value="#2D8ECF" />
+                        <Setter Property="Foreground" Value="White" />
+                      </Style>
+                      <Style Selector="Button.toggled">
+                        <Setter Property="Background" Value="#2D8ECF" />
+                        <Setter Property="Foreground" Value="White" />
                       </Style>
                     </Button.Styles>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">

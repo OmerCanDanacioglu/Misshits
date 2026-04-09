@@ -1,6 +1,6 @@
 namespace Misshits.Desktop.Services;
 
-public class SpellCheckService(SymSpellService symSpell)
+public class SpellCheckService(ISymSpellService symSpell) : ISpellCheckService
 {
     public List<Suggestion> Lookup(string word, bool shorterOnly = false)
     {

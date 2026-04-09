@@ -4,7 +4,7 @@ using Misshits.Desktop.Models;
 
 namespace Misshits.Desktop.Services;
 
-public class QuickPhraseService(IDbContextFactory<AppDbContext> dbFactory)
+public class QuickPhraseService(IDbContextFactory<AppDbContext> dbFactory) : IQuickPhraseService
 {
     public async Task<List<QuickPhrase>> GetAllAsync()
     {

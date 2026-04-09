@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Misshits.Desktop.ViewModels;
 
 namespace Misshits.Desktop.Views;
@@ -11,6 +12,18 @@ public partial class MainWindow : Window
         InitializeComponent();
         KeyDown += OnKeyDown;
         KeyUp += OnKeyUp;
+
+        // Reclaim focus whenever a button is clicked
+        AddHandler(Button.ClickEvent, OnAnyButtonClick, RoutingStrategies.Tunnel);
+
+        // Grab focus once the window is opened
+        Opened += (_, _) => Focus();
+    }
+
+    private void OnAnyButtonClick(object? sender, RoutedEventArgs e)
+    {
+        // Return focus to the window so physical keyboard always works
+        Focus();
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)

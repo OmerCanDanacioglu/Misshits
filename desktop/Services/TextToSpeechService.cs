@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Misshits.Desktop.Services;
 
-public class TextToSpeechService
+public class TextToSpeechService : ITextToSpeechService
 {
     private Process? _currentProcess;
 

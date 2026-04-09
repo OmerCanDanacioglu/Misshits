@@ -4,7 +4,7 @@ using Misshits.Desktop.Data;
 
 namespace Misshits.Desktop.Services;
 
-public class SymSpellService
+public class SymSpellService : ISymSpellService
 {
     private readonly int _maxEditDistance;
     private readonly int _prefixLength;

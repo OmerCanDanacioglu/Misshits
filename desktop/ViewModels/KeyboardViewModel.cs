@@ -10,9 +10,9 @@ namespace Misshits.Desktop.ViewModels;
 
 public partial class KeyboardViewModel : ViewModelBase
 {
-    private readonly SpellCheckService _spellCheck;
-    private readonly SmartConnectionService _smartConnection;
-    private readonly TextToSpeechService _tts;
+    private readonly ISpellCheckService _spellCheck;
+    private readonly ISmartConnectionService _smartConnection;
+    private readonly ITextToSpeechService _tts;
 
     // --- Keyboard layout ---
     private static readonly HashSet<string> ModifierCodes = new()
@@ -80,7 +80,7 @@ public partial class KeyboardViewModel : ViewModelBase
     private CancellationTokenSource? _spellCheckCts;
     private CancellationTokenSource? _predictionCts;
 
-    public KeyboardViewModel(SpellCheckService spellCheck, SmartConnectionService smartConnection, TextToSpeechService tts)
+    public KeyboardViewModel(ISpellCheckService spellCheck, ISmartConnectionService smartConnection, ITextToSpeechService tts)
     {
         _spellCheck = spellCheck;
         _smartConnection = smartConnection;

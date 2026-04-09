@@ -37,11 +37,12 @@ public partial class App : Application
             services.AddDbContextFactory<AppDbContext>(options =>
                 options.UseSqlite($"Data Source={dbPath}"));
 
-            services.AddSingleton<SymSpellService>();
-            services.AddHttpClient<SmartConnectionService>();
-            services.AddSingleton<SpellCheckService>();
-            services.AddSingleton<QuickPhraseService>();
-            services.AddSingleton<TextToSpeechService>();
+            services.AddSingleton<ISymSpellService, SymSpellService>();
+            services.AddSingleton<ISmartConnectionService, SmartConnectionService>();
+            services.AddHttpClient<ISmartConnectionService, SmartConnectionService>();
+            services.AddSingleton<ISpellCheckService, SpellCheckService>();
+            services.AddSingleton<IQuickPhraseService, QuickPhraseService>();
+            services.AddSingleton<ITextToSpeechService, TextToSpeechService>();
 
             services.AddSingleton<KeyboardViewModel>();
             services.AddSingleton<QuickPhrasesViewModel>();
@@ -68,7 +69,7 @@ public partial class App : Application
                         await db.Database.EnsureCreatedAsync();
 
                         // Load SymSpell dictionary from DB into memory
-                        var symSpell = provider.GetRequiredService<SymSpellService>();
+                        var symSpell = provider.GetRequiredService<ISymSpellService>();
                         await symSpell.LoadDictionaryAsync(provider);
                         Console.WriteLine("Misshits: Dictionary loaded.");
                     }

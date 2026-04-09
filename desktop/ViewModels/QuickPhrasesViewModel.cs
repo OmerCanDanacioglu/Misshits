@@ -8,12 +8,12 @@ namespace Misshits.Desktop.ViewModels;
 
 public partial class QuickPhrasesViewModel : ViewModelBase
 {
-    private readonly QuickPhraseService _service;
+    private readonly IQuickPhraseService _service;
     private readonly KeyboardViewModel _keyboard;
 
     public ObservableCollection<QuickPhrase> Phrases { get; } = new();
 
-    public QuickPhrasesViewModel(QuickPhraseService service, KeyboardViewModel keyboard)
+    public QuickPhrasesViewModel(IQuickPhraseService service, KeyboardViewModel keyboard)
     {
         _service = service;
         _keyboard = keyboard;
