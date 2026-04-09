@@ -217,6 +217,11 @@ export default function Keyboard() {
     suggestionsRef.current = suggestions
   }, [suggestions])
 
+  const currentWordRef = useRef(currentWord)
+  useEffect(() => {
+    currentWordRef.current = currentWord
+  }, [currentWord])
+
   const autoCorrectRef = useRef(autoCorrectEnabled)
   useEffect(() => {
     autoCorrectRef.current = autoCorrectEnabled
@@ -244,23 +249,27 @@ export default function Keyboard() {
   // Auto-correct the last word and append the given suffix
   const autoCorrectAndAppend = useCallback((suffix: string) => {
     setText(prev => {
-      const sug = suggestionsRef.current
-      if (autoCorrectRef.current && sug.length > 0 && sug[0].distance > 0) {
-        const match = prev.match(/[a-zA-Z]+$/)
-        if (match) {
-          const original = match[0]
-          const corrected = sug[0].term
-          correctionsRef.current.push({ original, corrected })
-          const idx = match.index!
-          return prev.slice(0, idx) + corrected + suffix
-        }
+      const match = prev.match(/[a-zA-Z]+$/)
+      if (!match || !autoCorrectRef.current) {
+        return prev + suffix
       }
-      // No suggestions yet — fire a direct API call for deferred correction
-      if (autoCorrectRef.current) {
-        const match = prev.match(/[a-zA-Z]+$/)
-        if (match && match[0].length >= 2) {
-          performDeferredCorrection(match[0], suffix)
-        }
+
+      const word = match[0]
+      const sug = suggestionsRef.current
+
+      // Only use cached suggestions if they're for THIS word (not a stale partial)
+      const suggestionsAreForCurrentWord =
+        currentWordRef.current.toLowerCase() === word.toLowerCase()
+
+      if (suggestionsAreForCurrentWord && sug.length > 0 && sug[0].distance > 0) {
+        const corrected = sug[0].term
+        correctionsRef.current.push({ original: word, corrected })
+        return prev.slice(0, match.index!) + corrected + suffix
+      }
+
+      // Suggestions are stale or empty — fire a direct API call for deferred correction
+      if (word.length >= 2) {
+        performDeferredCorrection(word, suffix)
       }
       return prev + suffix
     })
