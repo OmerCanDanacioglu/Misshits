@@ -49,7 +49,14 @@ public class TextBuffer : ITextBuffer
     private void PushHistory()
     {
         _history.Push(_text);
-        while (_history.Count > MaxHistory)
-            _history.TrimExcess();
+        // Trim oldest entries if over limit
+        if (_history.Count > MaxHistory)
+        {
+            var items = _history.ToArray();
+            _history.Clear();
+            // Keep only the most recent MaxHistory items (they're in reverse order from ToArray)
+            for (var i = Math.Min(items.Length, MaxHistory) - 1; i >= 0; i--)
+                _history.Push(items[i]);
+        }
     }
 }

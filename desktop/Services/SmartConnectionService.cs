@@ -20,6 +20,7 @@ public class SmartConnectionService : ISmartConnectionService
         _options = options;
         _http.BaseAddress = new Uri(options.BaseUrl);
         _http.DefaultRequestHeaders.Add("client-version", options.ClientVersion);
+        _http.Timeout = TimeSpan.FromSeconds(10);
     }
 
     public async Task<string?> CorrectSentenceAsync(string sentence, List<WordCorrection>? corrections)
@@ -92,14 +93,15 @@ public class SmartConnectionService : ISmartConnectionService
             return _options.FallbackPrompt;
 
         var wordList = string.Join(", ",
-            corrections.Select(c => $"'{c.Original}' was auto-corrected to '{c.Corrected}'"));
+            corrections.Select(c => $"'{c.Corrected}' (typed as '{c.Original}')"));
 
         return
-            $"The following words in this sentence were auto-corrected and may be wrong: {wordList}. " +
-            "Review ONLY these auto-corrected words. If any were corrected to the wrong word, " +
-            "replace them with the correct word based on the sentence context. " +
-            "Do NOT change any other words, punctuation, or structure of the sentence. " +
-            "Return the full sentence with only the necessary fixes applied.";
+            "You will receive a sentence that had some words auto-corrected. " +
+            $"These words may be wrong: {wordList}. " +
+            "Check if these auto-corrected words fit the sentence context. " +
+            "If a word is wrong, replace it with the right word. " +
+            "Keep everything else exactly the same. " +
+            "Reply with ONLY the corrected sentence, nothing else.";
     }
 
     private async Task<string?> SendCorrectionRequest(string sentence, string prompt, string token)

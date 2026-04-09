@@ -49,6 +49,102 @@ public class SymSpellService : ISymSpellService
         _loaded = true;
     }
 
+    private static readonly byte[] Magic = "SYMSPELL"u8.ToArray();
+    private const byte IndexVersion = 1;
+
+    /// <summary>
+    /// Save the pre-computed index to a binary file.
+    /// </summary>
+    public async Task SaveIndexAsync(string path)
+    {
+        await using var fs = File.Create(path);
+        using var bw = new BinaryWriter(fs);
+
+        // Header
+        bw.Write(Magic);
+        bw.Write(IndexVersion);
+        bw.Write((byte)_maxEditDistance);
+        bw.Write((byte)_prefixLength);
+
+        // Words
+        bw.Write(_words.Count);
+        foreach (var (word, freq) in _words)
+        {
+            bw.Write(word);
+            bw.Write(freq);
+        }
+
+        // Deletes
+        bw.Write(_deletes.Count);
+        foreach (var (del, candidates) in _deletes)
+        {
+            bw.Write(del);
+            bw.Write(candidates.Count);
+            foreach (var candidate in candidates)
+                bw.Write(candidate);
+        }
+
+        Console.WriteLine($"Misshits: Index saved to {path} ({fs.Length / 1024 / 1024} MB)");
+    }
+
+    /// <summary>
+    /// Load from a pre-computed binary index file. Returns false if file missing or corrupt.
+    /// </summary>
+    public async Task<bool> LoadIndexAsync(string path)
+    {
+        if (_loaded) return true;
+        if (!File.Exists(path)) return false;
+
+        try
+        {
+            await using var fs = File.OpenRead(path);
+            using var br = new BinaryReader(fs);
+
+            // Validate header
+            var magic = br.ReadBytes(8);
+            if (!magic.AsSpan().SequenceEqual(Magic)) return false;
+
+            var version = br.ReadByte();
+            if (version != IndexVersion) return false;
+
+            var maxDist = br.ReadByte();
+            var prefixLen = br.ReadByte();
+            if (maxDist != _maxEditDistance || prefixLen != _prefixLength) return false;
+
+            // Words
+            var wordCount = br.ReadInt32();
+            for (var i = 0; i < wordCount; i++)
+            {
+                var word = br.ReadString();
+                var freq = br.ReadInt64();
+                _words[word] = freq;
+            }
+
+            // Deletes
+            var deleteCount = br.ReadInt32();
+            for (var i = 0; i < deleteCount; i++)
+            {
+                var del = br.ReadString();
+                var candidateCount = br.ReadInt32();
+                var candidates = new HashSet<string>(candidateCount);
+                for (var j = 0; j < candidateCount; j++)
+                    candidates.Add(br.ReadString());
+                _deletes[del] = candidates;
+            }
+
+            _loaded = true;
+            Console.WriteLine($"Misshits: Dictionary loaded from cache ({_words.Count} words, {_deletes.Count} delete entries)");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Misshits: Cache load failed, will fall back to DB: {ex.Message}");
+            _words.Clear();
+            _deletes.Clear();
+            return false;
+        }
+    }
+
     /// <summary>
     /// Look up spelling suggestions for input.
     /// </summary>

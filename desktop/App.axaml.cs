@@ -87,9 +87,19 @@ public partial class App : Application
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 await db.Database.EnsureCreatedAsync();
 
+                var cachePath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "Misshits", "symspell.cache");
+
                 var symSpell = provider.GetRequiredService<ISymSpellService>();
+
+                // Try loading from binary cache first (fast)
+                if (await symSpell.LoadIndexAsync(cachePath))
+                    return;
+
+                // Fall back to loading from DB (slower, recomputes edits)
                 await symSpell.LoadDictionaryAsync(provider);
-                Console.WriteLine("Misshits: Dictionary loaded.");
+                Console.WriteLine("Misshits: Dictionary loaded from database.");
             }
             catch (Exception ex)
             {

@@ -81,13 +81,29 @@ public partial class KeyboardViewModel : ViewModelBase
         Predictions.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasPredictions));
     }
 
+    private int _textChangeDepth;
+
     private void OnBufferTextChanged(string newText)
     {
         Text = newText;
         DisplayText = _textBuffer.DisplayText;
-        ScheduleSpellCheck(newText);
-        SchedulePrediction(newText);
-        CheckSentenceCorrection(newText);
+
+        if (_textChangeDepth > 0) { _prevText = newText; return; }
+        _textChangeDepth++;
+        try
+        {
+            ScheduleSpellCheck(newText);
+            SchedulePrediction(newText);
+            CheckSentenceCorrection(newText);
+        }
+        catch
+        {
+            // Swallow to prevent UI thread crash
+        }
+        finally
+        {
+            _textChangeDepth--;
+        }
     }
 
     // --- Commands ---
@@ -122,6 +138,8 @@ public partial class KeyboardViewModel : ViewModelBase
     // --- Physical keyboard handling ---
     public void HandlePhysicalKeyDown(string code, bool ctrlKey, bool shiftKey)
     {
+        try
+        {
         _pressedKeys.Add(code);
         UpdateKeyStates();
 
@@ -155,6 +173,11 @@ public partial class KeyboardViewModel : ViewModelBase
                 _textBuffer.AppendText(ch.Value.ToString());
         }
         ClearStickyMods();
+        }
+        catch
+        {
+            // Swallow to prevent UI thread crash
+        }
     }
 
     public void HandlePhysicalKeyUp(string code)
@@ -207,38 +230,50 @@ public partial class KeyboardViewModel : ViewModelBase
     // --- Auto-correct orchestration ---
     private void HandleAutoCorrectAppend(string suffix)
     {
+        var currentText = Text;
         var newText = _autoCorrection.AutoCorrectAndAppend(
-            Text, suffix, CurrentWord, Suggestions, AutoCorrectEnabled);
+            currentText, suffix, CurrentWord, Suggestions, AutoCorrectEnabled);
 
         // Check if deferred correction is needed (suggestions were stale)
-        if (newText == Text + suffix && AutoCorrectEnabled)
+        string? deferredWord = null;
+        if (newText == currentText + suffix && AutoCorrectEnabled)
         {
-            var match = Regex.Match(Text, @"[a-zA-Z]+$");
+            var match = Regex.Match(currentText, @"[a-zA-Z]+$");
             if (match.Success && match.Value.Length >= 2)
+                deferredWord = match.Value;
+        }
+
+        // Apply the text change
+        _textBuffer.SetText(newText);
+
+        // Fire deferred correction AFTER SetText (non-blocking)
+        if (deferredWord != null)
+        {
+            var word = deferredWord;
+            var sfx = suffix;
+            _ = Task.Run(() =>
             {
-                var word = match.Value;
-                _textBuffer.SetText(newText);
-                // Fire deferred correction in background
-                _ = Task.Run(() =>
+                try
                 {
                     var correction = _autoCorrection.TryDeferredCorrection(word);
                     if (correction == null) return;
 
                     Dispatcher.UIThread.Post(() =>
                     {
-                        var pattern = word + suffix;
+                        var pattern = word + sfx;
                         var idx = _textBuffer.Text.LastIndexOf(pattern, StringComparison.Ordinal);
                         if (idx == -1) return;
                         _textBuffer.SetText(
-                            _textBuffer.Text[..idx] + correction.Corrected + suffix +
+                            _textBuffer.Text[..idx] + correction.Corrected + sfx +
                             _textBuffer.Text[(idx + pattern.Length)..]);
                     });
-                });
-                return;
-            }
+                }
+                catch
+                {
+                    // Silently drop
+                }
+            });
         }
-
-        _textBuffer.SetText(newText);
     }
 
     // --- Spell check (debounced) ---
@@ -299,9 +334,12 @@ public partial class KeyboardViewModel : ViewModelBase
     }
 
     // --- Sentence correction ---
+    private bool _correctionInFlight;
+
     private void CheckSentenceCorrection(string text)
     {
-        if (!ApiEnabled || text.Length <= _prevText.Length || !Regex.IsMatch(text, @"[.!?,;\n]$"))
+        if (_correctionInFlight) return;
+        if (!ApiEnabled || text.Length <= _prevText.Length || !Regex.IsMatch(text, @"[.!?\n]$"))
         {
             _prevText = text;
             return;
@@ -315,6 +353,7 @@ public partial class KeyboardViewModel : ViewModelBase
             return;
         }
 
+        _correctionInFlight = true;
         Correcting = true;
         var corrections = _autoCorrection.Corrections.ToList();
 
@@ -327,6 +366,7 @@ public partial class KeyboardViewModel : ViewModelBase
         if (sentence.Length < 3)
         {
             Correcting = false;
+            _correctionInFlight = false;
             _autoCorrection.ClearCorrections();
             return;
         }
@@ -335,7 +375,14 @@ public partial class KeyboardViewModel : ViewModelBase
         {
             try
             {
-                var corrected = await _smartConnection.CorrectSentenceAsync(sentence, corrections);
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                var correctionTask = _smartConnection.CorrectSentenceAsync(sentence, corrections);
+                var completed = await Task.WhenAny(correctionTask, Task.Delay(-1, cts.Token));
+                var corrected = completed == correctionTask ? await correctionTask : null;
+                // Validate: reject if response is wildly different length (LLM echoed prompt)
+                if (corrected != null && corrected.Length > sentence.Length * 3)
+                    corrected = null;
+
                 Dispatcher.UIThread.Post(() =>
                 {
                     if (corrected != null && corrected != sentence)
@@ -347,6 +394,7 @@ public partial class KeyboardViewModel : ViewModelBase
                     }
                     if (AutoSpeak) SpeakLastSentence(_textBuffer.Text);
                     Correcting = false;
+                    _correctionInFlight = false;
                     _autoCorrection.ClearCorrections();
                 });
             }
@@ -355,6 +403,7 @@ public partial class KeyboardViewModel : ViewModelBase
                 Dispatcher.UIThread.Post(() =>
                 {
                     Correcting = false;
+                    _correctionInFlight = false;
                     _autoCorrection.ClearCorrections();
                 });
             }
