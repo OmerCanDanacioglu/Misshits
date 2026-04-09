@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Misshits.Desktop.ViewModels;
 
 namespace Misshits.Desktop.Views;
@@ -12,18 +13,17 @@ public partial class MainWindow : Window
         InitializeComponent();
         KeyDown += OnKeyDown;
         KeyUp += OnKeyUp;
-
-        // Reclaim focus whenever a button is clicked
-        AddHandler(Button.ClickEvent, OnAnyButtonClick, RoutingStrategies.Tunnel);
-
-        // Grab focus once the window is opened
         Opened += (_, _) => Focus();
+
+        // After any pointer release anywhere in the window, reclaim focus
+        AddHandler(PointerReleasedEvent, OnPointerReleased, RoutingStrategies.Tunnel);
     }
 
-    private void OnAnyButtonClick(object? sender, RoutedEventArgs e)
+    private void OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        // Return focus to the window so physical keyboard always works
-        Focus();
+        // Delay to let the click action complete, then steal focus back
+        DispatcherTimer.RunOnce(() => FocusManager?.ClearFocus(), TimeSpan.FromMilliseconds(50));
+        DispatcherTimer.RunOnce(() => Focus(), TimeSpan.FromMilliseconds(60));
     }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
@@ -34,9 +34,13 @@ public partial class MainWindow : Window
             var code = MapKey(e.Key);
             if (code != null)
             {
-                vm.Keyboard.HandlePhysicalKeyDown(code,
-                    e.KeyModifiers.HasFlag(KeyModifiers.Control),
-                    e.KeyModifiers.HasFlag(KeyModifiers.Shift));
+                try
+                {
+                    vm.Keyboard.HandlePhysicalKeyDown(code,
+                        e.KeyModifiers.HasFlag(KeyModifiers.Control),
+                        e.KeyModifiers.HasFlag(KeyModifiers.Shift));
+                }
+                catch { }
             }
         }
     }

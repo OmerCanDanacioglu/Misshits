@@ -29,6 +29,7 @@ public partial class KeyboardViewModel : ViewModelBase
     [ObservableProperty] private bool _shorterOnly;
     [ObservableProperty] private bool _autoSpeak;
     [ObservableProperty] private bool _apiEnabled = true;
+    [ObservableProperty] private bool _timeAwareSuggestions = true;
     [ObservableProperty] private bool _phrasesOpen;
     [ObservableProperty] private bool _correcting;
     [ObservableProperty] private string _currentWord = "";
@@ -70,6 +71,7 @@ public partial class KeyboardViewModel : ViewModelBase
         _shorterOnly = saved.ShorterOnly;
         _autoSpeak = saved.AutoSpeak;
         _apiEnabled = saved.ApiEnabled;
+        _timeAwareSuggestions = saved.TimeAwareSuggestions;
 
         Rows = KeyboardLayouts.Qwerty.Select(row =>
             row.Select(def => new KeyViewModel(def)).ToList()
@@ -109,7 +111,8 @@ public partial class KeyboardViewModel : ViewModelBase
             AutoCorrectEnabled = AutoCorrectEnabled,
             ShorterOnly = ShorterOnly,
             AutoSpeak = AutoSpeak,
-            ApiEnabled = ApiEnabled
+            ApiEnabled = ApiEnabled,
+            TimeAwareSuggestions = TimeAwareSuggestions
         });
     }
 
@@ -117,6 +120,7 @@ public partial class KeyboardViewModel : ViewModelBase
     partial void OnShorterOnlyChanged(bool value) => SaveSettings();
     partial void OnAutoSpeakChanged(bool value) => SaveSettings();
     partial void OnApiEnabledChanged(bool value) => SaveSettings();
+    partial void OnTimeAwareSuggestionsChanged(bool value) { SaveSettings(); RefreshContextualPhrases(); }
 
     private int _textChangeDepth;
 
@@ -145,10 +149,10 @@ public partial class KeyboardViewModel : ViewModelBase
 
     private void RefreshContextualPhrases()
     {
-        TimePeriod = _contextualPhrases.CurrentTimePeriod;
-        var phrases = _contextualPhrases.GetCurrentPhrases();
         ContextualPhrases.Clear();
-        foreach (var p in phrases) ContextualPhrases.Add(p);
+        if (!TimeAwareSuggestions) { TimePeriod = ""; return; }
+        TimePeriod = _contextualPhrases.CurrentTimePeriod;
+        foreach (var p in _contextualPhrases.GetCurrentPhrases()) ContextualPhrases.Add(p);
     }
 
     // --- Commands ---

@@ -40,6 +40,8 @@
                         Content="Auto-speak" Foreground="#8A8A8A" FontSize="20" />
           <ToggleSwitch IsChecked="{Binding Keyboard.ApiEnabled}"
                         Content="Smart API" Foreground="#8A8A8A" FontSize="20" />
+          <ToggleSwitch IsChecked="{Binding Keyboard.TimeAwareSuggestions}"
+                        Content="Time-aware" Foreground="#8A8A8A" FontSize="20" />
         </StackPanel>
       </DockPanel>
     </Border>
