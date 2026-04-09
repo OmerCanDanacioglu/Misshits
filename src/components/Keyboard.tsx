@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useSpellCheck } from '../lib/useSpellCheck'
+import { useSpellCheck, fetchSpellSuggestions } from '../lib/useSpellCheck'
 import { useSentenceCorrection } from '../lib/useSentenceCorrection'
 import { useTextHistory } from '../lib/useTextHistory'
 import { useWordPrediction } from '../lib/useWordPrediction'
@@ -221,6 +221,25 @@ export default function Keyboard() {
     autoCorrectRef.current = autoCorrectEnabled
   }, [autoCorrectEnabled])
 
+  // Fire a direct API call to correct a word that was typed too fast for suggestions
+  const performDeferredCorrection = useCallback(async (word: string, suffix: string) => {
+    try {
+      const results = await fetchSpellSuggestions(word)
+      if (results.length === 0 || results[0].distance === 0) return
+
+      const corrected = results[0].term
+      setText(prev => {
+        const pattern = word + suffix
+        const idx = prev.lastIndexOf(pattern)
+        if (idx === -1) return prev
+        correctionsRef.current.push({ original: word, corrected })
+        return prev.slice(0, idx) + corrected + suffix + prev.slice(idx + pattern.length)
+      })
+    } catch {
+      // Network error — silently drop
+    }
+  }, [setText])
+
   // Auto-correct the last word and append the given suffix
   const autoCorrectAndAppend = useCallback((suffix: string) => {
     setText(prev => {
@@ -235,9 +254,16 @@ export default function Keyboard() {
           return prev.slice(0, idx) + corrected + suffix
         }
       }
+      // No suggestions yet — fire a direct API call for deferred correction
+      if (autoCorrectRef.current) {
+        const match = prev.match(/[a-zA-Z]+$/)
+        if (match && match[0].length >= 2) {
+          performDeferredCorrection(match[0], suffix)
+        }
+      }
       return prev + suffix
     })
-  }, [])
+  }, [setText, performDeferredCorrection])
 
   const autoCorrectAndAddSpace = useCallback(() => {
     autoCorrectAndAppend(' ')

@@ -14,6 +14,25 @@ export interface SpellCheckState {
 const API_BASE = ''  // Uses Vite proxy in dev (/api → localhost:5050)
 
 /**
+ * Standalone fetch for spell suggestions. Can be called outside of React hooks.
+ */
+export async function fetchSpellSuggestions(
+  word: string,
+  options?: { maxLength?: number; signal?: AbortSignal }
+): Promise<SuggestionResult[]> {
+  if (word.length < 2) return []
+  const params = new URLSearchParams({ word })
+  if (options?.maxLength != null) {
+    params.set('maxLength', String(options.maxLength))
+  }
+  const res = await fetch(`${API_BASE}/api/spellcheck?${params}`, {
+    signal: options?.signal,
+  })
+  if (!res.ok) return []
+  return res.json()
+}
+
+/**
  * Hook that calls the backend SymSpell API for spell-checking.
  * Extracts the last word being typed and fetches suggestions for it.
  * Debounces requests to avoid overwhelming the API while typing fast.
