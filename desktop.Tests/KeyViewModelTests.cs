@@ -1,70 +1,70 @@
-using Xunit;
-using FluentAssertions;
+using NUnit.Framework;
+using Shouldly;
 using Misshits.Desktop.Models;
 
 namespace Misshits.Desktop.Tests;
 
 public class KeyViewModelTests
 {
-    [Fact]
+    [Test]
     public void IsActive_TrueWhenPressed()
     {
         var key = new KeyViewModel(new KeyDef("A", "KeyA"));
         key.IsPressed = true;
-        key.IsActive.Should().BeTrue();
+        key.IsActive.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void IsActive_TrueWhenToggled()
     {
         var key = new KeyViewModel(new KeyDef("Shift", "ShiftLeft"));
         key.IsToggled = true;
-        key.IsActive.Should().BeTrue();
+        key.IsActive.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void IsActive_FalseWhenNeitherPressedNorToggled()
     {
         var key = new KeyViewModel(new KeyDef("A", "KeyA"));
-        key.IsActive.Should().BeFalse();
+        key.IsActive.ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void DisplayLabel_InitializedFromDefinition()
     {
         var key = new KeyViewModel(new KeyDef("Q", "KeyQ"));
-        key.DisplayLabel.Should().Be("Q");
+        key.DisplayLabel.ShouldBe("Q");
     }
 
-    [Fact]
+    [Test]
     public void DisplayLabel_CanBeUpdated()
     {
         var key = new KeyViewModel(new KeyDef("Q", "KeyQ"));
         key.DisplayLabel = "q";
-        key.DisplayLabel.Should().Be("q");
+        key.DisplayLabel.ShouldBe("q");
     }
 
-    [Fact]
+    [Test]
     public void Properties_ExposeDefinitionValues()
     {
         var def = new KeyDef("Enter", "Enter", 1.5, true, "enter");
         var key = new KeyViewModel(def);
 
-        key.Code.Should().Be("Enter");
-        key.Width.Should().Be(1.5);
-        key.Special.Should().BeTrue();
-        key.SubLabel.Should().Be("enter");
-        key.IsSpace.Should().BeFalse();
+        key.Code.ShouldBe("Enter");
+        key.Width.ShouldBe(1.5);
+        key.Special.ShouldBeTrue();
+        key.SubLabel.ShouldBe("enter");
+        key.IsSpace.ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void IsSpace_TrueForSpaceKey()
     {
         var key = new KeyViewModel(new KeyDef("space", "Space", 8));
-        key.IsSpace.Should().BeTrue();
+        key.IsSpace.ShouldBeTrue();
     }
 
-    [Fact]
+    [Test]
     public void PropertyChanged_FiresForIsPressed()
     {
         var key = new KeyViewModel(new KeyDef("A", "KeyA"));
@@ -73,11 +73,11 @@ public class KeyViewModelTests
 
         key.IsPressed = true;
 
-        changed.Should().Contain("IsPressed");
-        changed.Should().Contain("IsActive");
+        changed.ShouldContain("IsPressed");
+        changed.ShouldContain("IsActive");
     }
 
-    [Fact]
+    [Test]
     public void PropertyChanged_FiresForIsToggled()
     {
         var key = new KeyViewModel(new KeyDef("Shift", "ShiftLeft"));
@@ -86,7 +86,7 @@ public class KeyViewModelTests
 
         key.IsToggled = true;
 
-        changed.Should().Contain("IsToggled");
-        changed.Should().Contain("IsActive");
+        changed.ShouldContain("IsToggled");
+        changed.ShouldContain("IsActive");
     }
 }

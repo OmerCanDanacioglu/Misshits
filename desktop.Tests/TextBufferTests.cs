@@ -1,20 +1,20 @@
-using Xunit;
-using FluentAssertions;
+using NUnit.Framework;
+using Shouldly;
 using Misshits.Desktop.Services;
 
 namespace Misshits.Desktop.Tests;
 
 public class TextBufferTests
 {
-    [Fact]
+    [Test]
     public void SetText_ChangesTextProperty()
     {
         var buffer = new TextBuffer();
         buffer.SetText("hello");
-        buffer.Text.Should().Be("hello");
+        buffer.Text.ShouldBe("hello");
     }
 
-    [Fact]
+    [Test]
     public void SetText_FiresTextChangedEvent()
     {
         var buffer = new TextBuffer();
@@ -22,10 +22,10 @@ public class TextBufferTests
         buffer.TextChanged += text => received = text;
 
         buffer.SetText("hello");
-        received.Should().Be("hello");
+        received.ShouldBe("hello");
     }
 
-    [Fact]
+    [Test]
     public void SetText_SameValue_IsNoOp()
     {
         var buffer = new TextBuffer();
@@ -35,72 +35,72 @@ public class TextBufferTests
         buffer.TextChanged += _ => eventFired = true;
 
         buffer.SetText("hello");
-        eventFired.Should().BeFalse();
+        eventFired.ShouldBeFalse();
     }
 
-    [Fact]
+    [Test]
     public void AppendText_AppendsCorrectly()
     {
         var buffer = new TextBuffer();
         buffer.SetText("hello");
         buffer.AppendText(" world");
-        buffer.Text.Should().Be("hello world");
+        buffer.Text.ShouldBe("hello world");
     }
 
-    [Fact]
+    [Test]
     public void AppendText_SmartSpacing_AddsSpaceWhenNeeded()
     {
         var buffer = new TextBuffer();
         buffer.SetText("hello");
         buffer.AppendText("world", smartSpacing: true);
-        buffer.Text.Should().Be("hello world");
+        buffer.Text.ShouldBe("hello world");
     }
 
-    [Fact]
+    [Test]
     public void AppendText_SmartSpacing_SkipsSpaceAfterSpace()
     {
         var buffer = new TextBuffer();
         buffer.SetText("hello ");
         buffer.AppendText("world", smartSpacing: true);
-        buffer.Text.Should().Be("hello world");
+        buffer.Text.ShouldBe("hello world");
     }
 
-    [Fact]
+    [Test]
     public void AppendText_SmartSpacing_SkipsSpaceAfterNewline()
     {
         var buffer = new TextBuffer();
         buffer.SetText("hello\n");
         buffer.AppendText("world", smartSpacing: true);
-        buffer.Text.Should().Be("hello\nworld");
+        buffer.Text.ShouldBe("hello\nworld");
     }
 
-    [Fact]
+    [Test]
     public void AppendText_SmartSpacing_SkipsSpaceWhenEmpty()
     {
         var buffer = new TextBuffer();
         buffer.AppendText("hello", smartSpacing: true);
-        buffer.Text.Should().Be("hello");
+        buffer.Text.ShouldBe("hello");
     }
 
-    [Fact]
+    [Test]
     public void Undo_RevertsToPreviousState()
     {
         var buffer = new TextBuffer();
         buffer.SetText("hello");
         buffer.SetText("hello world");
         buffer.Undo();
-        buffer.Text.Should().Be("hello");
+        buffer.Text.ShouldBe("hello");
     }
 
-    [Fact]
+    [Test]
     public void Undo_WhenEmpty_DoesNothing()
     {
         var buffer = new TextBuffer();
         buffer.Undo();
-        buffer.Text.Should().Be("");
+        buffer.Text.ShouldBe("");
     }
 
-    [Fact]
+    [Test]
     public void Undo_MultipleSteps()
     {
         var buffer = new TextBuffer();
@@ -108,50 +108,48 @@ public class TextBufferTests
         buffer.SetText("ab");
         buffer.SetText("abc");
         buffer.Undo();
-        buffer.Text.Should().Be("ab");
+        buffer.Text.ShouldBe("ab");
         buffer.Undo();
-        buffer.Text.Should().Be("a");
+        buffer.Text.ShouldBe("a");
         buffer.Undo();
-        buffer.Text.Should().Be("");
+        buffer.Text.ShouldBe("");
     }
 
-    [Fact]
+    [Test]
     public void Clear_ResetsText()
     {
         var buffer = new TextBuffer();
         buffer.SetText("hello world");
         buffer.Clear();
-        buffer.Text.Should().Be("");
+        buffer.Text.ShouldBe("");
     }
 
-    [Fact]
+    [Test]
     public void HistoryLimit_DoesNotCauseInfiniteLoop()
     {
         var buffer = new TextBuffer();
-        // Push 60 entries — exceeds the 50 limit
         for (var i = 0; i < 60; i++)
             buffer.SetText($"text{i}");
 
-        // Should not hang — regression test for Stack.TrimExcess bug
         buffer.SetText("final");
-        buffer.Text.Should().Be("final");
+        buffer.Text.ShouldBe("final");
     }
 
-    [Fact]
+    [Test]
     public void DisplayText_IncludesCursorWhenVisible()
     {
         var buffer = new TextBuffer();
         buffer.SetText("hello");
         buffer.SetCursorVisible(true);
-        buffer.DisplayText.Should().Be("hello|");
+        buffer.DisplayText.ShouldBe("hello|");
     }
 
-    [Fact]
+    [Test]
     public void DisplayText_ShowsSpaceWhenCursorHidden()
     {
         var buffer = new TextBuffer();
         buffer.SetText("hello");
         buffer.SetCursorVisible(false);
-        buffer.DisplayText.Should().Be("hello ");
+        buffer.DisplayText.ShouldBe("hello ");
     }
 }

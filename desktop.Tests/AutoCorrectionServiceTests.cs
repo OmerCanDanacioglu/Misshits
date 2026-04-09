@@ -1,17 +1,18 @@
-using Xunit;
-using FluentAssertions;
-using Moq;
+using NUnit.Framework;
+using NSubstitute;
+using Shouldly;
 using Misshits.Desktop.Models;
 using Misshits.Desktop.Services;
 
 namespace Misshits.Desktop.Tests;
 
+[TestFixture]
 public class AutoCorrectionServiceTests
 {
-    private readonly Mock<ISpellCheckService> _spellCheckMock = new();
-    private AutoCorrectionService CreateService() => new(_spellCheckMock.Object);
+    private readonly ISpellCheckService _spellCheck = Substitute.For<ISpellCheckService>();
+    private AutoCorrectionService CreateService() => new(_spellCheck);
 
-    [Fact]
+    [Test]
     public void AutoCorrectAndAppend_CorrectedText_WhenSuggestionsMatchCurrentWord()
     {
         var service = CreateService();
@@ -19,11 +20,11 @@ public class AutoCorrectionServiceTests
 
         var result = service.AutoCorrectAndAppend("helo", " ", "helo", suggestions, enabled: true);
 
-        result.Should().Be("hello ");
-        service.Corrections.Should().ContainSingle(c => c.Original == "helo" && c.Corrected == "hello");
+        result.ShouldBe("hello ");
+        service.Corrections.ShouldContain(c => c.Original == "helo" && c.Corrected == "hello");
     }
 
-    [Fact]
+    [Test]
     public void AutoCorrectAndAppend_ReturnsOriginalPlusSuffix_WhenDisabled()
     {
         var service = CreateService();
@@ -31,34 +32,33 @@ public class AutoCorrectionServiceTests
 
         var result = service.AutoCorrectAndAppend("helo", " ", "helo", suggestions, enabled: false);
 
-        result.Should().Be("helo ");
-        service.Corrections.Should().BeEmpty();
+        result.ShouldBe("helo ");
+        service.Corrections.ShouldBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void AutoCorrectAndAppend_ReturnsOriginalPlusSuffix_WhenNoSuggestions()
     {
         var service = CreateService();
 
         var result = service.AutoCorrectAndAppend("hello", " ", "hello", new List<Suggestion>(), enabled: true);
 
-        result.Should().Be("hello ");
+        result.ShouldBe("hello ");
     }
 
-    [Fact]
+    [Test]
     public void AutoCorrectAndAppend_SkipsStaleSuggestions()
     {
         var service = CreateService();
-        // currentWord is "world" but text ends with "helo" — suggestions are stale
         var suggestions = new List<Suggestion> { new("world", 1, 50000) };
 
         var result = service.AutoCorrectAndAppend("helo", " ", "world", suggestions, enabled: true);
 
-        result.Should().Be("helo ");
-        service.Corrections.Should().BeEmpty();
+        result.ShouldBe("helo ");
+        service.Corrections.ShouldBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void AutoCorrectAndAppend_SkipsExactMatch()
     {
         var service = CreateService();
@@ -66,60 +66,60 @@ public class AutoCorrectionServiceTests
 
         var result = service.AutoCorrectAndAppend("hello", " ", "hello", suggestions, enabled: true);
 
-        result.Should().Be("hello ");
-        service.Corrections.Should().BeEmpty();
+        result.ShouldBe("hello ");
+        service.Corrections.ShouldBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void TryDeferredCorrection_ReturnsCorrection_WhenSpellCheckFindsOne()
     {
-        _spellCheckMock.Setup(s => s.Lookup("helo", false))
+        _spellCheck.Lookup("helo", false)
             .Returns(new List<Suggestion> { new("hello", 1, 80000) });
 
         var service = CreateService();
         var result = service.TryDeferredCorrection("helo");
 
-        result.Should().NotBeNull();
-        result!.Original.Should().Be("helo");
-        result.Corrected.Should().Be("hello");
+        result.ShouldNotBeNull();
+        result!.Original.ShouldBe("helo");
+        result.Corrected.ShouldBe("hello");
     }
 
-    [Fact]
+    [Test]
     public void TryDeferredCorrection_ReturnsNull_ForCorrectWord()
     {
-        _spellCheckMock.Setup(s => s.Lookup("hello", false))
+        _spellCheck.Lookup("hello", false)
             .Returns(new List<Suggestion> { new("hello", 0, 80000) });
 
         var service = CreateService();
         var result = service.TryDeferredCorrection("hello");
 
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void TryDeferredCorrection_ReturnsNull_ForShortWord()
     {
         var service = CreateService();
         var result = service.TryDeferredCorrection("a");
 
-        result.Should().BeNull();
+        result.ShouldBeNull();
     }
 
-    [Fact]
+    [Test]
     public void ClearCorrections_EmptiesList()
     {
-        _spellCheckMock.Setup(s => s.Lookup("helo", false))
+        _spellCheck.Lookup("helo", false)
             .Returns(new List<Suggestion> { new("hello", 1, 80000) });
 
         var service = CreateService();
         service.TryDeferredCorrection("helo");
-        service.Corrections.Should().HaveCount(1);
+        service.Corrections.Count.ShouldBe(1);
 
         service.ClearCorrections();
-        service.Corrections.Should().BeEmpty();
+        service.Corrections.ShouldBeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void Corrections_TracksMultipleCorrections()
     {
         var service = CreateService();
@@ -129,6 +129,6 @@ public class AutoCorrectionServiceTests
         service.AutoCorrectAndAppend("helo", " ", "helo", suggestions1, true);
         service.AutoCorrectAndAppend("helo wrld", " ", "wrld", suggestions2, true);
 
-        service.Corrections.Should().HaveCount(2);
+        service.Corrections.Count.ShouldBe(2);
     }
 }
