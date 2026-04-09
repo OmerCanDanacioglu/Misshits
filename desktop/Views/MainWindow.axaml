@@ -140,6 +140,39 @@
       </ItemsControl>
     </Border>
 
+    <!-- CONTEXTUAL PHRASES (time-aware) -->
+    <Border DockPanel.Dock="Bottom" Background="#1A1A1A"
+            BorderBrush="#2A2A2A" BorderThickness="0,1,0,0"
+            Padding="12,8">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Left"
+                   Text="{Binding Keyboard.TimePeriod, StringFormat='{}⏰ {0}'}"
+                   Foreground="#7B68EE" FontSize="16" FontWeight="SemiBold"
+                   VerticalAlignment="Center" Margin="0,0,12,0" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding Keyboard.ContextualPhrases}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="6" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Button Content="{Binding}" Padding="16,8"
+                        Focusable="False"
+                        Background="#1E1040" Foreground="#B8A9FF"
+                        BorderBrush="#7B68EE" BorderThickness="1"
+                        CornerRadius="16" FontSize="16"
+                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Keyboard.InsertContextualPhraseCommand}"
+                        CommandParameter="{Binding}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </DockPanel>
+    </Border>
+
     <!-- SUGGESTIONS / PREDICTIONS BAR -->
     <Border DockPanel.Dock="Bottom" Background="#1A1A1A"
             BorderBrush="#2A2A2A" BorderThickness="0,1,0,0"

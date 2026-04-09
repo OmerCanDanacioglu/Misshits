@@ -59,9 +59,20 @@ public class SmartConnectionService : ISmartConnectionService
         var request = new HttpRequestMessage(HttpMethod.Post, "/gridCommands/sendToLLM");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+        var now = DateTime.Now;
+        var period = now.Hour switch
+        {
+            >= 5 and < 11 => "morning",
+            >= 11 and < 14 => "midday",
+            >= 14 and < 17 => "afternoon",
+            >= 17 and < 21 => "evening",
+            _ => "night"
+        };
+        var timeContext = $"The current time is {now:HH:mm} ({period}). ";
+
         var body = new
         {
-            customPrompt = _options.PredictionPrompt,
+            customPrompt = timeContext + _options.PredictionPrompt,
             userContent = context,
             expectedResponseCount = 1,
             locale = "en-gb"

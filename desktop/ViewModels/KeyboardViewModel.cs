@@ -16,6 +16,7 @@ public partial class KeyboardViewModel : ViewModelBase
     private readonly ITextToSpeechService _tts;
     private readonly IAutoCorrectionService _autoCorrection;
     private readonly ISettingsService _settings;
+    private readonly IContextualPhrasesService _contextualPhrases;
 
     // --- Keyboard layout ---
     public List<List<KeyViewModel>> Rows { get; }
@@ -35,6 +36,8 @@ public partial class KeyboardViewModel : ViewModelBase
 
     public ObservableCollection<Suggestion> Suggestions { get; } = new();
     public ObservableCollection<string> Predictions { get; } = new();
+    public ObservableCollection<string> ContextualPhrases { get; } = new();
+    [ObservableProperty] private string _timePeriod = "";
     public bool HasSuggestions => Suggestions.Count > 0;
     public bool HasPredictions => Predictions.Count > 0 && Suggestions.Count == 0;
 
@@ -50,7 +53,8 @@ public partial class KeyboardViewModel : ViewModelBase
         ISmartConnectionService smartConnection,
         ITextToSpeechService tts,
         IAutoCorrectionService autoCorrection,
-        ISettingsService settings)
+        ISettingsService settings,
+        IContextualPhrasesService contextualPhrases)
     {
         _textBuffer = textBuffer;
         _spellCheck = spellCheck;
@@ -58,6 +62,7 @@ public partial class KeyboardViewModel : ViewModelBase
         _tts = tts;
         _autoCorrection = autoCorrection;
         _settings = settings;
+        _contextualPhrases = contextualPhrases;
 
         // Load persisted settings
         var saved = settings.Load();
@@ -82,6 +87,12 @@ public partial class KeyboardViewModel : ViewModelBase
             DisplayText = _textBuffer.DisplayText;
         };
         cursorTimer.Start();
+
+        // Contextual phrases — refresh every minute
+        RefreshContextualPhrases();
+        var contextTimer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+        contextTimer.Tick += (_, _) => RefreshContextualPhrases();
+        contextTimer.Start();
 
         Suggestions.CollectionChanged += (_, _) =>
         {
@@ -132,7 +143,19 @@ public partial class KeyboardViewModel : ViewModelBase
         }
     }
 
+    private void RefreshContextualPhrases()
+    {
+        TimePeriod = _contextualPhrases.CurrentTimePeriod;
+        var phrases = _contextualPhrases.GetCurrentPhrases();
+        ContextualPhrases.Clear();
+        foreach (var p in phrases) ContextualPhrases.Add(p);
+    }
+
     // --- Commands ---
+    [RelayCommand]
+    private void InsertContextualPhrase(string phrase) =>
+        _textBuffer.AppendText(phrase, smartSpacing: true);
+
     [RelayCommand]
     private void Speak()
     {

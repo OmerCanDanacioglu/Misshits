@@ -69,6 +69,7 @@ public partial class App : Application
         services.AddSingleton<ITextToSpeechService, TextToSpeechService>();
         services.AddSingleton<ITextBuffer, TextBuffer>();
         services.AddSingleton<IAutoCorrectionService, AutoCorrectionService>();
+        services.AddSingleton<IContextualPhrasesService, ContextualPhrasesService>();
 
         // ViewModels
         services.AddSingleton<KeyboardViewModel>();
