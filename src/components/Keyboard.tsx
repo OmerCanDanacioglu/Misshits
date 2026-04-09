@@ -113,8 +113,9 @@ export default function Keyboard() {
   const [autoCorrectEnabled, setAutoCorrectEnabled] = useState(true)
   const [shorterOnly, setShorterOnly] = useState(false)
   const [autoSpeak, setAutoSpeak] = useState(false)
+  const [apiEnabled, setApiEnabled] = useState(true)
   const { currentWord, suggestions } = useSpellCheck(text, shorterOnly)
-  const predictions = useWordPrediction(text)
+  const predictions = useWordPrediction(apiEnabled ? text : '')
   const { phrases, usePhrase, addPhrase, deletePhrase } = useQuickPhrases()
   const [phrasesOpen, setPhrasesOpen] = useState(false)
   const history = useTextHistory()
@@ -203,12 +204,12 @@ export default function Keyboard() {
   // Trigger sentence correction on punctuation or newline
   const prevTextRef = useRef(text)
   useEffect(() => {
-    if (text.length > prevTextRef.current.length && /[.!?,;\n]$/.test(text)) {
+    if (apiEnabled && text.length > prevTextRef.current.length && /[.!?,;\n]$/.test(text)) {
       setCorrecting(true)
       checkAndCorrect(text, correctionsRef.current)
     }
     prevTextRef.current = text
-  }, [text, checkAndCorrect])
+  }, [text, checkAndCorrect, apiEnabled])
 
   // Keep refs so callbacks can read latest values without re-creating
   const suggestionsRef = useRef(suggestions)
@@ -449,6 +450,15 @@ export default function Keyboard() {
             />
             <span className="toggle-slider" />
             <span className="toggle-label">Auto-speak</span>
+          </label>
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={apiEnabled}
+              onChange={(e) => setApiEnabled(e.target.checked)}
+            />
+            <span className="toggle-slider" />
+            <span className="toggle-label">Smart API</span>
           </label>
         </div>
       </div>
