@@ -33,13 +33,13 @@
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="16"
                     HorizontalAlignment="Right">
           <ToggleSwitch IsChecked="{Binding Keyboard.AutoCorrectEnabled}"
-                        Content="Auto-correct" Foreground="#8A8A8A" />
+                        Content="Auto-correct" Foreground="#8A8A8A" FontSize="20" />
           <ToggleSwitch IsChecked="{Binding Keyboard.ShorterOnly}"
-                        Content="Shorter/equal" Foreground="#8A8A8A" />
+                        Content="Shorter/equal" Foreground="#8A8A8A" FontSize="20" />
           <ToggleSwitch IsChecked="{Binding Keyboard.AutoSpeak}"
-                        Content="Auto-speak" Foreground="#8A8A8A" />
+                        Content="Auto-speak" Foreground="#8A8A8A" FontSize="20" />
           <ToggleSwitch IsChecked="{Binding Keyboard.ApiEnabled}"
-                        Content="Smart API" Foreground="#8A8A8A" />
+                        Content="Smart API" Foreground="#8A8A8A" FontSize="20" />
         </StackPanel>
       </DockPanel>
     </Border>
@@ -64,7 +64,7 @@
                       Background="#222" BorderBrush="#333" BorderThickness="1"
                       Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).QuickPhrases.UsePhraseCommand}"
                       CommandParameter="{Binding Id}">
-                <TextBlock Text="{Binding Text}" Foreground="#4AAFE0" FontSize="14" />
+                <TextBlock Text="{Binding Text}" Foreground="#4AAFE0" FontSize="18" />
               </Button>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
@@ -95,7 +95,7 @@
                           controls:FlexPanel.Weight="{Binding Width}"
                           Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Keyboard.MouseClickCommand}"
                           CommandParameter="{Binding Code}"
-                          Foreground="#4AAFE0" FontSize="22" FontWeight="Normal"
+                          Foreground="#4AAFE0" FontSize="28" FontWeight="Normal"
                           HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Center"
                           VerticalContentAlignment="Center"
@@ -106,9 +106,9 @@
                       </Style>
                     </Button.Styles>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                      <TextBlock Text="{Binding DisplayLabel}" FontSize="22"
+                      <TextBlock Text="{Binding DisplayLabel}" FontSize="28"
                                  Foreground="#4AAFE0" HorizontalAlignment="Center" />
-                      <TextBlock Text="{Binding SubLabel}" FontSize="9"
+                      <TextBlock Text="{Binding SubLabel}" FontSize="12"
                                  Foreground="#555" HorizontalAlignment="Center"
                                  IsVisible="{Binding SubLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                     </StackPanel>
@@ -129,7 +129,7 @@
         <StackPanel Orientation="Horizontal" Spacing="6"
                     IsVisible="{Binding Keyboard.HasSuggestions}">
           <TextBlock Text="{Binding Keyboard.CurrentWord, StringFormat='{}{0}:'}"
-                     Foreground="#E05555" FontWeight="SemiBold" FontSize="15"
+                     Foreground="#E05555" FontWeight="SemiBold" FontSize="20"
                      VerticalAlignment="Center" />
           <ItemsControl ItemsSource="{Binding Keyboard.Suggestions}">
             <ItemsControl.ItemsPanel>
@@ -141,7 +141,7 @@
               <DataTemplate>
                 <Button Content="{Binding Term}" Padding="20,8"
                         Background="#2A2A2A" Foreground="#4AAFE0"
-                        CornerRadius="4" FontSize="16"
+                        CornerRadius="4" FontSize="20"
                         Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Keyboard.ApplySuggestionCommand}"
                         CommandParameter="{Binding Term}" />
               </DataTemplate>
@@ -162,7 +162,7 @@
               <Button Content="{Binding}" Padding="24,8"
                       Background="#222" Foreground="#4AAFE0"
                       BorderBrush="#333" BorderThickness="1"
-                      CornerRadius="4" FontSize="16"
+                      CornerRadius="4" FontSize="20"
                       Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Keyboard.InsertPredictionCommand}"
                       CommandParameter="{Binding}" />
             </DataTemplate>
@@ -176,9 +176,9 @@
       <StackPanel Margin="16">
         <SelectableTextBlock Text="{Binding Keyboard.DisplayText}"
                              FontFamily="Consolas,Monaco,Courier New,monospace"
-                             FontSize="16" Foreground="#E0E0E0"
+                             FontSize="32" Foreground="#E0E0E0"
                              TextWrapping="Wrap" />
-        <TextBlock Text="Correcting..." FontSize="12" Foreground="#2D8ECF"
+        <TextBlock Text="Correcting..." FontSize="24" Foreground="#2D8ECF"
                    Margin="0,8,0,0"
                    IsVisible="{Binding Keyboard.Correcting}" />
       </StackPanel>

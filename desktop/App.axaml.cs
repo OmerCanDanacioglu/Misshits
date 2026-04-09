@@ -62,15 +62,19 @@ public partial class App : Application
                 {
                     try
                     {
-                        Console.WriteLine("Misshits: Seeding database...");
-                        await DatabaseSeeder.SeedAsync(provider);
+                        // Ensure DB and tables exist (no-op if already created)
+                        using var scope = provider.CreateScope();
+                        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                        await db.Database.EnsureCreatedAsync();
+
+                        // Load SymSpell dictionary from DB into memory
                         var symSpell = provider.GetRequiredService<SymSpellService>();
                         await symSpell.LoadDictionaryAsync(provider);
                         Console.WriteLine("Misshits: Dictionary loaded.");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Misshits: Seed error: {ex}");
+                        Console.WriteLine($"Misshits: Startup error: {ex}");
                     }
                 });
             }
