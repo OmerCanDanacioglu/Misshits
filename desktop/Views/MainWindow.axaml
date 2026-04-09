@@ -1,0 +1,188 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Misshits.Desktop.ViewModels;assembly=Misshits.Desktop"
+        xmlns:models="clr-namespace:Misshits.Desktop.Models;assembly=Misshits.Desktop"
+        xmlns:controls="clr-namespace:Misshits.Desktop.Controls;assembly=Misshits.Desktop"
+        x:Class="Misshits.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Misshits"
+        Background="#111111"
+        WindowState="Maximized">
+
+  <DockPanel>
+
+    <!-- TOOLBAR -->
+    <Border DockPanel.Dock="Top" Background="#181818"
+            BorderBrush="#2A2A2A" BorderThickness="0,0,0,1"
+            Padding="12,8">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
+          <Button Content="Speak" Command="{Binding Keyboard.SpeakCommand}"
+                  Background="#2D8ECF" Foreground="White" FontWeight="SemiBold"
+                  Padding="18,8" CornerRadius="6" />
+          <Button Content="Clear" Command="{Binding Keyboard.ClearCommand}"
+                  Background="#C0392B" Foreground="White" FontWeight="SemiBold"
+                  Padding="18,8" CornerRadius="6" />
+          <Button Content="Undo" Command="{Binding Keyboard.UndoCommand}"
+                  Background="#555555" Foreground="White" FontWeight="SemiBold"
+                  Padding="18,8" CornerRadius="6" />
+          <Button Content="Phrases" Command="{Binding Keyboard.TogglePhrasesCommand}"
+                  Background="#2A6E3F" Foreground="White" FontWeight="SemiBold"
+                  Padding="18,8" CornerRadius="6" />
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="16"
+                    HorizontalAlignment="Right">
+          <ToggleSwitch IsChecked="{Binding Keyboard.AutoCorrectEnabled}"
+                        Content="Auto-correct" Foreground="#8A8A8A" />
+          <ToggleSwitch IsChecked="{Binding Keyboard.ShorterOnly}"
+                        Content="Shorter/equal" Foreground="#8A8A8A" />
+          <ToggleSwitch IsChecked="{Binding Keyboard.AutoSpeak}"
+                        Content="Auto-speak" Foreground="#8A8A8A" />
+          <ToggleSwitch IsChecked="{Binding Keyboard.ApiEnabled}"
+                        Content="Smart API" Foreground="#8A8A8A" />
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- QUICK PHRASES -->
+    <Border DockPanel.Dock="Top" Background="#181818"
+            BorderBrush="#2A2A2A" BorderThickness="0,0,0,1"
+            Padding="12,10" MaxHeight="180"
+            IsVisible="{Binding Keyboard.PhrasesOpen}">
+      <DockPanel>
+        <Button DockPanel.Dock="Bottom" Content="Save current text as phrase"
+                Command="{Binding QuickPhrases.SaveCurrentTextCommand}"
+                Background="#333" Foreground="#AAA" Padding="12,5"
+                Margin="0,8,0,0" CornerRadius="4" />
+        <ItemsControl ItemsSource="{Binding QuickPhrases.Phrases}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="models:QuickPhrase">
+              <Button Margin="3" Padding="14,8" CornerRadius="20"
+                      Background="#222" BorderBrush="#333" BorderThickness="1"
+                      Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).QuickPhrases.UsePhraseCommand}"
+                      CommandParameter="{Binding Id}">
+                <TextBlock Text="{Binding Text}" Foreground="#4AAFE0" FontSize="14" />
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </DockPanel>
+    </Border>
+
+    <!-- KEYBOARD (bottom) -->
+    <Border DockPanel.Dock="Bottom" Background="#1C1C1C" Padding="6">
+      <ItemsControl ItemsSource="{Binding Keyboard.Rows}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><StackPanel Spacing="2" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <ItemsControl ItemsSource="{Binding}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><controls:FlexPanel /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemContainerTheme>
+                <ControlTheme x:DataType="ContentPresenter" TargetType="ContentPresenter">
+                  <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </ControlTheme>
+              </ItemsControl.ItemContainerTheme>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="models:KeyViewModel">
+                  <Button Height="72" CornerRadius="4" Margin="1"
+                          controls:FlexPanel.Weight="{Binding Width}"
+                          Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Keyboard.MouseClickCommand}"
+                          CommandParameter="{Binding Code}"
+                          Foreground="#4AAFE0" FontSize="22" FontWeight="Normal"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Center"
+                          VerticalContentAlignment="Center"
+                          Padding="4,6">
+                    <Button.Styles>
+                      <Style Selector="Button">
+                        <Setter Property="Background" Value="Transparent" />
+                      </Style>
+                    </Button.Styles>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding DisplayLabel}" FontSize="22"
+                                 Foreground="#4AAFE0" HorizontalAlignment="Center" />
+                      <TextBlock Text="{Binding SubLabel}" FontSize="9"
+                                 Foreground="#555" HorizontalAlignment="Center"
+                                 IsVisible="{Binding SubLabel, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                    </StackPanel>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Border>
+
+    <!-- SUGGESTIONS / PREDICTIONS BAR -->
+    <Border DockPanel.Dock="Bottom" Background="#1A1A1A"
+            BorderBrush="#2A2A2A" BorderThickness="0,1,0,0"
+            MinHeight="48" Padding="12,10">
+      <Panel>
+        <StackPanel Orientation="Horizontal" Spacing="6"
+                    IsVisible="{Binding Keyboard.HasSuggestions}">
+          <TextBlock Text="{Binding Keyboard.CurrentWord, StringFormat='{}{0}:'}"
+                     Foreground="#E05555" FontWeight="SemiBold" FontSize="15"
+                     VerticalAlignment="Center" />
+          <ItemsControl ItemsSource="{Binding Keyboard.Suggestions}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="6" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Button Content="{Binding Term}" Padding="20,8"
+                        Background="#2A2A2A" Foreground="#4AAFE0"
+                        CornerRadius="4" FontSize="16"
+                        Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Keyboard.ApplySuggestionCommand}"
+                        CommandParameter="{Binding Term}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <ItemsControl ItemsSource="{Binding Keyboard.Predictions}"
+                      IsVisible="{Binding Keyboard.HasPredictions}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="6"
+                          HorizontalAlignment="Center" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Button Content="{Binding}" Padding="24,8"
+                      Background="#222" Foreground="#4AAFE0"
+                      BorderBrush="#333" BorderThickness="1"
+                      CornerRadius="4" FontSize="16"
+                      Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).Keyboard.InsertPredictionCommand}"
+                      CommandParameter="{Binding}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Panel>
+    </Border>
+
+    <!-- TEXT OUTPUT (fills remaining space) -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="#111111">
+      <StackPanel Margin="16">
+        <SelectableTextBlock Text="{Binding Keyboard.DisplayText}"
+                             FontFamily="Consolas,Monaco,Courier New,monospace"
+                             FontSize="16" Foreground="#E0E0E0"
+                             TextWrapping="Wrap" />
+        <TextBlock Text="Correcting..." FontSize="12" Foreground="#2D8ECF"
+                   Margin="0,8,0,0"
+                   IsVisible="{Binding Keyboard.Correcting}" />
+      </StackPanel>
+    </ScrollViewer>
+
+  </DockPanel>
+</Window>

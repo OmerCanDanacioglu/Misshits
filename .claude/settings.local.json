@@ -12,7 +12,11 @@
       "Bash(curl -s \"http://localhost:5050/api/health\")",
       "Bash(curl -s \"http://localhost:5050/api/spellcheck?word=writting\")",
       "Bash(curl:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(wc:*)",
+      "Bash(dotnet --info)",
+      "Read(//home/omercd/.dotnet/**)",
+      "Bash(~/.dotnet/dotnet --version)"
     ]
   },
   "sandbox": {

@@ -5,9 +5,12 @@ dist/
 # .NET
 api/bin/
 api/obj/
+desktop/bin/
+desktop/obj/
 
 # SUBTLEX-UK data file (large, not for version control)
 api/Data/SUBTLEX-UK.txt
+desktop/Data/SUBTLEX-UK.txt
 
 # IDE
 .vs/
